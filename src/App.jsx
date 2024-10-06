@@ -1,33 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
+import {useState} from 'react'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [city, setCity] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [weatherData, setWeatherData] = useState(null)
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault(); //Prevent default behavior of form submission
+  }
+
+  const fetchWeather = async () => {
+    setLoading(true)
+    setError(null)
+    setWeatherData(null)
+
+    const apiKey = `552d90f1f77d40658d974951241709`;
+    const apiUrl = `http://api.weatherapi.com/v1/current.json?key=${apiKey}&q=${city}`
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        }
+      });
+    if(!response.ok) {
+      throw new Error('City not found or API request failed')
+    }
+    const data = await response.json()
+    setWeatherData(data)
+    } catch (error) {
+    console.error('Error fetching weather data:', error)
+    }
+  }
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+      <div className='weather-app'>
+        <h1>Weather App</h1>
+        
+        {/* Input form for city name */}
+        <form onSubmit={handleFormSubmit}>
+          <input
+          type='text'
+          value={city}
+          placeholder='Enter city name'
+          onChange={(e) => setCity(e.target.value)}
+          />
+          <button type='submit'>Get Weather</button>
+        </form>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+
+      {/* Display weather data */}
+      {loading && <p>Loading...</p>}
+      {error && <p>Error: {error}</p>}
+      {weatherData && (
+        <div>
+          <h2>{weatherData.location.name}</h2>
+          <p>Temperature: {weatherData.current.temp_c}</p>
+        </div>
+      )}
     </>
   )
 }
